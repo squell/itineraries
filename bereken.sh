@@ -18,6 +18,10 @@ afstand() {
 	$CURL "$URL" | sed -n /distance/,/value/p | awk -v FS=':' '/value/{ printf "%.1f", ($2/1000.0) }'
 }
 
+if [ $(afstand "amsterdam" "amsterdam") != 0.0 ]; then
+	die "Er is iets mis met Google."
+fi
+
 # lees de addressen in een array
 while read naam rest; do
     	test -z "${naam%#*}" && continue
