@@ -12,10 +12,20 @@ die() {
 	exit 1
 }
 
+# check of de addressen enigszins overeenkomen
+komtovereen() {
+	ascii="$(echo "$1" | iconv -c -t ascii//translit)"
+	output="$(cat | sed 's/.*\[//;s/].*$//')"
+	echo "$output" | iconv -c -t ascii//translit | grep -qi "${ascii%,*}" || die "Adres ${1^} veranderd in $output"
+}
+
 # print de afstand in km, volgens google maps, tussen twee fysieke addressen
 afstand() {
 	URL="https://maps.googleapis.com/maps/api/distancematrix/json?origins=$1&destinations=$2&key=AIzaSyCHc_k-0nMYf-zUPEgfUIqY81Y3uYKA3gM"
-	$CURL "$URL" | sed -n /distance/,/value/p | awk -v FS=':' '/value/{ printf "%.1f", ($2/1000.0) }'
+	response="$($CURL "$URL")"
+	echo "$response" | grep "origin_addresses"      | komtovereen "$1"
+	echo "$response" | grep "destination_addresses" | komtovereen "$2"
+	echo "$response" | sed -n /distance/,/value/p | awk -v FS=':' '/value/{ printf "%.1f", ($2/1000.0) }'
 }
 
 if [ $(afstand "amsterdam" "amsterdam") != 0.0 ]; then
