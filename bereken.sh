@@ -65,14 +65,16 @@ dagnummer() {
 CSV=$(mktemp --suffix .csv)
 while read gereisd; do
 	datum="${gereisd%:*}"
+	test -z "$datum" && continue
 	echo "bezig met $datum" >&2
+	echo "# $datum"
 	datumnr="$(dagnummer "$datum")"
 	gereisd="${gereisd#*:}"
 	[ "$datumnr" ] || die "Ongeldige datum: $datum"
-	echo -n "$datumnr,"
-        reisschema $gereisd
-	echo
-done < "${0%/*}/reizen.txt" > $CSV
+	echo -n "$datumnr," >> $CSV
+	reisschema $gereisd >> $CSV
+	echo >> $CSV
+done < "${0%/*}/reizen.txt" | zenity --progress --pulsate --auto-close
 
 if [ "$TITANIC" ]; then 
 	die 'Daar ging iets fout.'
